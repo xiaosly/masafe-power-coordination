@@ -1,0 +1,4 @@
+case,method,seconds_per_decision
+C1,rl,0.000333
+C2,rl,0.000585
+C3,rl,0.000503

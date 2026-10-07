@@ -1,0 +1,36 @@
+\documentclass[11pt]{article}
+\usepackage[paperwidth=17cm,paperheight=30cm,margin=0.5cm]{geometry}
+\usepackage{newtxtext,newtxmath}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{algorithm}
+\setlength\PreviewBorder{6pt}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\pagestyle{empty}
+\begin{document}
+\begin{algorithm}[H]
+\caption{Learning to Coordinate Local and Global Operational Constraints}
+\begin{algorithmic}[1]
+\REQUIRE CMG-LG $\mathcal{G}^{\mathrm{LG}}$, budgets $d_i^{\ell}$, $d^{g}$, step size $\eta_\lambda$, clipping parameter $\epsilon$
+\ENSURE Decentralized policies $\pi_{\theta_i}(a_i\mid o_i)$, $i\in\mathcal{I}$
+\STATE Initialize policies $\theta_i$, critics $V_r$, $V_g$, $V_{\ell,i}$ and multipliers $\lambda_i^{\ell}$, $\lambda^{g}$
+\FOR{iteration $k=1,\dots,K$}
+\STATE Collect episodes with $a_{i,t}\sim\pi_{\theta_i}(\cdot\mid o_{i,t})$, $\forall i\in\mathcal{I}$
+\STATE Estimate $J_i^{\ell}$ and $J^{g}$ from the discounted episode costs
+\STATE $\lambda_i^{\ell}\leftarrow\big[\lambda_i^{\ell}+\eta_\lambda(J_i^{\ell}-d_i^{\ell})\big]_+$, \quad $\lambda^{g}\leftarrow\big[\lambda^{g}+\eta_\lambda(J^{g}-d^{g})\big]_+$
+\STATE Compute the advantages $A_r^t$, $A_{i,\ell}^t$ and $A_g^t$
+\STATE $A_h^t\leftarrow A_r^t-\sum_{i\in\mathcal{I}}\lambda_i^{\ell}A_{i,\ell}^t-\lambda^{g}A_g^t$
+\STATE Draw a random permutation $(m_1,\dots,m_N)$ of $\mathcal{I}$; \ $M_t\leftarrow1$
+\FOR{$j=1,\dots,N$}
+\STATE $A_h^{m_j,t}\leftarrow M_t\big(A_r^t-\lambda_{m_j}^{\ell}A_{m_j,\ell}^t-\lambda^{g}A_g^t\big)$
+\STATE Update $\theta_{m_j}$ by maximizing $\mathbb{E}\big[\min\big(\rho_{m_j,t}A_h^{m_j,t},\ \mathrm{clip}(\rho_{m_j,t},1-\epsilon,1+\epsilon)\,A_h^{m_j,t}\big)\big]$
+\STATE $M_t\leftarrow M_t\,\rho_{m_j,t}$, \quad $\rho_{m_j,t}=\pi_{\theta_{m_j}}(a_t^{m_j}\mid o_t^{m_j})/\pi_{\theta_{m_j}^{\mathrm{old}}}(a_t^{m_j}\mid o_t^{m_j})$
+\ENDFOR
+\STATE Update the critics $V_r$, $V_g$ and $V_{\ell,i}$ with the reward and cost returns
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+\end{document}
